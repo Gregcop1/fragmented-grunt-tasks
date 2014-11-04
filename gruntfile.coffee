@@ -11,6 +11,16 @@ loadConfig = (path)->
   )
   return object
 
+registerTasks = (grunt, path)->
+  glob = require('glob')
+  object = [];
+  glob.sync('*.coffee', {cwd: path}).forEach((option)->
+    key = option.replace(/\.coffee$/,'')
+    grunt.registerTask key, require(path + option)
+  )
+
+  return object
+
 module.exports = (grunt) ->
   # charge toutes les modules de grunt
   require("load-grunt-tasks")(grunt)
@@ -29,13 +39,5 @@ module.exports = (grunt) ->
   # on initialise la configuration stockée dans la variable config
   grunt.initConfig(config)
 
-  grunt.registerTask('default', [
-    'coffee:build'
-    'uglify'
-  ])
-
-  grunt.registerTask('dev', [
-    'coffee:build'
-    'uglify'
-    'watch'
-  ])
+  # on demande l'enregistrement des tâches de lancement
+  registerTasks(grunt, './tasks/')
