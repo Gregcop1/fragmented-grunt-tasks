@@ -1,49 +1,33 @@
 'use strict'
 
+
+loadConfig = (path)->
+  glob = require('glob')
+  object = {};
+
+  glob.sync('*', {cwd: path}).forEach((option)->
+    key = option.replace(/\.coffee$/,'')
+    object[key] = require(path + option)
+  )
+  return object
+
 module.exports = (grunt) ->
-  # load all grunt tasks
+  # charge toutes les modules de grunt
   require("load-grunt-tasks")(grunt)
 
-  grunt.initConfig({
+  # stockage de la configuration dans une variable
+  config = 
     pkg: grunt.file.readJSON('package.json')
     env: process.env
     gc:
       jsSrc  : 'assets/js/src'
       jsDest : 'assets/js'
 
-    coffee:
-      build:
-        options:
-          sourceMap: true
-        expand: true
-        flatten: true
-        cwd: '<%= gc.jsSrc %>'
-        src: '*.coffee'
-        dest: '<%= gc.jsDest %>'
-        ext: '.js'
+  # on étend la configuration de base avec nos tâches d'execution
+  grunt.util._.extend(config, loadConfig('./tasks/options/'));
 
-    uglify: 
-      options:
-        banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd HH:MM:ss") %> */\n'
-        sourceMap: true
-      build:
-        files: [
-          expand: true
-          cwd: '<%=gc.jsDest %>'
-          src:  ['*.js', '!*.min.js']
-          dest: '<%=gc.jsDest %>'
-          ext: '.min.js'
-        ]
-
-
-    watch:
-      coffee:
-        files: ['<%=gc.jsSrc %>/*.coffee']
-        tasks: [
-          'coffee:build'
-          'uglify'
-        ]
-  })
+  # on initialise la configuration stockée dans la variable config
+  grunt.initConfig(config)
 
   grunt.registerTask('default', [
     'coffee:build'
